@@ -29,6 +29,8 @@ h1 {
 }
 #connected-device img.snapshot {
 	position: absolute;
+  min-width: 800px;
+  min-height: 600px;
 }
 #connected-device div.ptz-spd-ctl-box {
 	position: absolute;

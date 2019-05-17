@@ -102,6 +102,8 @@ function wsServerRequest(request) {
 			fetchSnapshot(conn, params);
 		} else if(method === 'ptzMove') {
 			ptzMove(conn, params);
+		} else if(method === 'ptzMoveAbs') {
+			ptzMoveAbs(conn, params);
 		} else if(method === 'ptzStop') {
 			ptzStop(conn, params);
 		} else if(method === 'ptzHome') {
@@ -220,6 +222,24 @@ function ptzMove(conn, params) {
 	}
 	device.ptzMove(params, (error) => {
 		var res = {'id': 'ptzMove'};
+		if(error) {
+			res['error'] = error.toString();
+		} else {
+			res['result'] = true;
+		}
+		conn.send(JSON.stringify(res));
+	});
+}
+
+function ptzMoveAbs(conn, params) {
+	var device = devices[params.address];
+	if(!device) {
+		var res = {'id': 'ptzMove', 'error': 'The specified device is not found: ' + params.address};
+		conn.send(JSON.stringify(res));
+		return;
+	}
+	device.ptzMoveAbs(params, (error) => {
+		var res = {'id': 'ptzMoveAbs'};
 		if(error) {
 			res['error'] = error.toString();
 		} else {

@@ -54,6 +54,9 @@ OnvifManager.prototype.init = function() {
 	this.el['zom_out'].on('mouseup', this.ptzStop.bind(this));
 	this.el['zom_out'].on('touchstart', this.ptzMove.bind(this));
 	this.el['zom_out'].on('touchend', this.ptzStop.bind(this));
+
+	this.el['img_snp'].on('click', this.ptzMoveAbs.bind(this));
+
 };
 
 OnvifManager.prototype.adjustSize = function() {
@@ -106,7 +109,7 @@ OnvifManager.prototype.initWebSocketConnection = function() {
 		} else if(id === 'connect') {
 			this.connectCallback(data);
 		} else if(id === 'fetchSnapshot') {
-			this.fetchSnapshotCallback(data);
+      // this.fetchSnapshotCallback(data);
 		} else if(id === 'ptzMove') {
 			this.ptzMoveCallback(data);
 		} else if(id === 'ptzStop') {
@@ -175,6 +178,7 @@ OnvifManager.prototype.startDiscoveryCallback = function(data) {
 		this.showMessageModal('Error', 'No device was found. Reload this page to discover ONVIF devices again.')
 	} else {
 		this.disabledLoginForm(false);
+		this.el['sel_dev'].prop("selectedIndex", 1);
 	}
 };
 
@@ -219,6 +223,7 @@ OnvifManager.prototype.fetchSnapshot = function() {
 
 OnvifManager.prototype.fetchSnapshotCallback = function(data) {
 	if(data.result) {
+    /*
 		this.el['img_snp'].attr('src', data.result);
 		window.setTimeout(function() {
 			this.snapshot_w = this.el['img_snp'].get(0).naturalWidth;
@@ -227,7 +232,8 @@ OnvifManager.prototype.fetchSnapshotCallback = function(data) {
 			if(this.device_connected === true) {
 				this.fetchSnapshot();
 			}
-		}.bind(this), 10);
+		}.bind(this), 1000);
+    */
 	} else if(data.error) {
 		console.log(data.error);
 	}
@@ -247,6 +253,45 @@ OnvifManager.prototype.ptzGotoHome = function(event) {
 		'address': this.selected_address,
 		'timeout': 30
 	});
+};
+
+OnvifManager.prototype.ptzMoveAbs = function(event) {
+  var rect = event.currentTarget.getBoundingClientRect();
+  var cx = event.clientX;
+  var cy = event.clientY;
+  if(event.type === 'touchstart') {
+    if(event.targetTouches[0]) {
+      cx = event.targetTouches[0].clientX;
+      cy = event.targetTouches[0].clientY;
+    } else if(event.changedTouches[0]) {
+      cx = event.changedTouches[0].clientX;
+      cy = event.changedTouches[0].clientY;
+    }
+  }
+  var mx = cx - rect.left;
+  var my = cy - rect.top;
+  var w = rect.width;
+  var h = rect.height;
+
+  var relX = (mx + 0.0) / w;
+  var relY = 1-((my + 0.0) / h);
+
+  //alert((e.pageX - posX)+ ' , ' + (e.pageY - posY) + ' - ' + relX + ', ' + relY);
+  var pos = {x: 0, y: 0, z: 0};
+  pos.x = 0.063 * (2*relX - 1);
+  if (relY > 0.5) {
+    pos.y = 0.063 * (2*relY - 1);
+  } else {
+    pos.y = 0.0245 * (2*relY - 1);
+  }
+  var spd = {x: 1, y: 1, z: 1};
+  this.sendRequest('ptzMoveAbs', {
+    'address': this.selected_address,
+    'position'  : pos,
+    'speed'  : spd,
+    'timeout': 30
+  });
+
 };
 
 OnvifManager.prototype.ptzMove = function(event) {
@@ -352,3 +397,5 @@ OnvifManager.prototype.ptzHomeCallback = function(data) {
 };
 
 })();
+
+
